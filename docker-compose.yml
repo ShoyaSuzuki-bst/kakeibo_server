@@ -1,0 +1,27 @@
+version: '3'
+volumes:
+  bundle:
+  postgres:
+services:
+  app:
+    build: .
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/usr/src/app:delegated
+    links:
+      - postgres
+    stdin_open: true
+    tty: true
+    # killでpid残っちゃうので、upの際に消す
+    command: /bin/sh -c "bundle install; rm /usr/src/app/tmp/pids/server.pid; bin/rails s -b 0.0.0.0"
+    depends_on: 
+      - postgres
+  postgres:
+    image: postgres:9.6-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
