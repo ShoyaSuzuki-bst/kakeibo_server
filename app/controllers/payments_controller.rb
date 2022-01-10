@@ -5,6 +5,7 @@ class PaymentsController < ApplicationController
   before_action :get_payment, except: [:index, :create]
   def index
     @payments = Payment.all
+    render json: @payments, each_serializer: PaymentSerializer
   end
 
   def show
