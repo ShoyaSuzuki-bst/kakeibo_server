@@ -10,11 +10,8 @@ class SessionsController < ApplicationController
   end
 
   def create
-    request_params = SessionsRequestParams.new(params)
-    request_params.validate!
-
     begin
-      decoded_token = FirebaseUtils::Auth.verify_id_token(request_params.id_token)
+      decoded_token = FirebaseUtils::Auth.verify_id_token(session_params[:id_token])
     rescue StandardError => e
       Rails.logger.error('====================')
       Rails.logger.error(e.message)
@@ -46,5 +43,11 @@ class SessionsController < ApplicationController
     current_user.update!(firebase_uid: nil)
     reset_session
     render json: { status: 'Successfully logged out.' }
+  end
+
+  private
+
+  def session_params
+    params.permit(:email, :id_token)
   end
 end
