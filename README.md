@@ -1,24 +1,12 @@
-# README
+# 家計簿アプリ
+これは何の変哲もないシンプルな家計簿アプリ  
+想定としては支出の管理のみ可能
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+## 環境構築
+以下のコマンドを一つずつ順番に実行
+```
+$ docker-compose build
+$ docker-compsoe up -d
+$ docker-compose exec app rails db:create
+$ docker-compose exec app rails db:migrate
+```
