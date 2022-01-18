@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require 'jwt'
+require 'net/http'
 
 # 参考: https://qiita.com/otakky/items/b7582202f5cde8f2dd21
 module FirebaseUtils
   module Auth
-    PROJECT_ID = 'mer-sell'
+    PROJECT_ID = 'kakeibo-338013'
     ALGORITHM = 'RS256'
     ISSUER_BASE_URL = 'https://securetoken.google.com/'
     CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
@@ -51,24 +52,6 @@ module FirebaseUtils
         }
       end
 
-      def _validate_jwt(json)
-        payload = json[:payload]
-        header = json[:header]
-
-        return 'Firebase ID token has no "kid" claim.' unless header['kid']
-        return "Firebase ID token has incorrect algorithm. Expected \"#{ALGORITHM}\" but got \"#{header['alg']}\"." unless header['alg'] == ALGORITHM
-        return "Firebase ID token has incorrect \"aud\" (audience) claim. Expected \"#{PROJECT_ID}\" but got \"#{payload['aud']}\"." unless payload['aud'] == PROJECT_ID
-
-        issuer = ISSUER_BASE_URL + PROJECT_ID
-        return "Firebase ID token has incorrect \"iss\" (issuer) claim. Expected \"#{issuer}\" but got \"#{payload['iss']}\"." unless payload['iss'] == issuer
-
-        return 'Firebase ID token has no "sub" (subject) claim.' unless payload['sub'].is_a?(String)
-        return 'Firebase ID token has an empty string "sub" (subject) claim.' if payload['sub'].empty?
-        return 'Firebase ID token has "sub" (subject) claim longer than 128 characters.' if payload['sub'].size > 128
-
-        nil
-      end
-
       def _fetch_public_keys
         uri = URI.parse(CLIENT_CERT_URL)
         https = Net::HTTP.new(uri.host, uri.port)
@@ -87,6 +70,24 @@ module FirebaseUtils
         end
 
         data
+      end
+
+      def _validate_jwt(json)
+        payload = json[:payload]
+        header = json[:header]
+
+        return 'Firebase ID token has no "kid" claim.' unless header['kid']
+        return "Firebase ID token has incorrect algorithm. Expected \"#{ALGORITHM}\" but got \"#{header['alg']}\"." unless header['alg'] == ALGORITHM
+        return "Firebase ID token has incorrect \"aud\" (audience) claim. Expected \"#{PROJECT_ID}\" but got \"#{payload['aud']}\"." unless payload['aud'] == PROJECT_ID
+
+        issuer = ISSUER_BASE_URL + PROJECT_ID
+        return "Firebase ID token has incorrect \"iss\" (issuer) claim. Expected \"#{issuer}\" but got \"#{payload['iss']}\"." unless payload['iss'] == issuer
+
+        return 'Firebase ID token has no "sub" (subject) claim.' unless payload['sub'].is_a?(String)
+        return 'Firebase ID token has an empty string "sub" (subject) claim.' if payload['sub'].empty?
+        return 'Firebase ID token has "sub" (subject) claim longer than 128 characters.' if payload['sub'].size > 128
+
+        nil
       end
     end
   end

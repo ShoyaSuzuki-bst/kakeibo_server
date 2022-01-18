@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  skip_before_action :login_required, only: [:show, :create]
+  skip_before_action :authenticate, only: [:show, :create]
 
   def show
     if session[:firebase_uid]
@@ -23,25 +23,15 @@ class SessionsController < ApplicationController
       }
       render json: errors, status: :unauthorized
     else
-      user = User.find_by(email: decoded_token['decoded_token'][:payload]['email'])
-      if user.present?
-        user.update!(firebase_uid: decoded_token['decoded_token'][:payload]['user_id'])
-        session[:firebase_uid] = user.firebase_uid
-
-        render json: { status: 'Successfully logged in.' }
-      else
-        errors = {
-          title: 'ログインエラー',
-          messages: ['新しいユーザーでログインするためには事前のユーザー追加申請が必要です。システム管理者に連絡してください。']
-        }
-        render json: errors, status: :unauthorized
-      end
+      user = User.find_or_create_by(email: decoded_token['decoded_token'][:payload]['email'])
+      user.update!(firebase_uid: decoded_token['decoded_token'][:payload]['user_id'])
+      render json: user
     end
   end
 
   def destroy
-    current_user.update!(firebase_uid: nil)
-    reset_session
+    @current_user.update!(firebase_uid: nil)
+    @current_user = nil
     render json: { status: 'Successfully logged out.' }
   end
 
