@@ -1,15 +1,17 @@
 class UsersController < ApplicationController
   skip_before_action :authenticate, only: :create
-  before_action :get_user
+  before_action :get_user, except: [:show, :create]
 
   def show
-    render json: @user
+    render json: @current_user
   end
 
   def create
-    decoded_token = FirebaseUtils::Auth.verify_id_token(token)
-    @user = User.create!(user_params.merge(firebase_uid: decoded_token['uid']))
-    render json: @user
+    authenticate_or_request_with_http_token do |token, _|
+      decoded_token = FirebaseUtils::Auth.verify_id_token(token)
+      @user = User.create!(user_params.merge(firebase_uid: decoded_token['uid']))
+      return render json: @user
+    end
   end
 
   def update
