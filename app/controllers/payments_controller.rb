@@ -4,7 +4,7 @@
 class PaymentsController < ApplicationController
   before_action :get_payment, except: [:index, :create]
   def index
-    @payments = Payment.all
+    @payments = Payment.where(user: @current_user)
     render json: @payments, each_serializer: PaymentSerializer
   end
 
@@ -13,7 +13,7 @@ class PaymentsController < ApplicationController
   end
 
   def create
-    @payment = Payment.create!(payment_params)
+    @payment = Payment.create!(payment_params.merge(user_id: @current_user.id))
     render json: @payment, serializer: PaymentSerializer
   end
 
