@@ -4,6 +4,7 @@ class ApplicationController < ActionController::API
 
   protected
   def authenticate
+    sleep(3) if Rails.env.development?
     authenticate_token || render_unauthorized
   end
 

@@ -13,7 +13,14 @@ class PaymentsController < ApplicationController
   end
 
   def create
-    @payment = Payment.create!(payment_params.merge(user_id: @current_user.id))
+    pp '-' * 100
+    pp params
+    pp '-' * 100
+    begin
+      @payment = Payment.create!(payment_params.merge(user_id: @current_user.id))
+    rescue StandardError => e
+      return render json: {'message': e.message}, status: 500
+    end
     render json: @payment, serializer: PaymentSerializer
   end
 
@@ -36,6 +43,6 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.permit(:is_income, :price)
+    params.require(:payment).permit(:price, :is_income)
   end
 end
