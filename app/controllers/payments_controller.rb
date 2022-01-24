@@ -4,7 +4,7 @@
 class PaymentsController < ApplicationController
   before_action :get_payment, except: [:index, :create]
   def index
-    @payments = Payment.where(user: @current_user)
+    @payments = Payment.where(user_id: @current_user.id).order(created_at: 'DESC')
     render json: @payments, each_serializer: PaymentSerializer
   end
 
@@ -13,7 +13,11 @@ class PaymentsController < ApplicationController
   end
 
   def create
-    @payment = Payment.create!(payment_params.merge(user_id: @current_user.id))
+    begin
+      @payment = Payment.create!(payment_params.merge(user_id: @current_user.id))
+    rescue StandardError => e
+      return render json: {'message': e.message}, status: 500
+    end
     render json: @payment, serializer: PaymentSerializer
   end
 
@@ -36,6 +40,6 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.permit(:is_income, :price)
+    params.require(:payment).permit(:price, :is_income)
   end
 end
