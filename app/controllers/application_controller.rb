@@ -4,15 +4,26 @@ class ApplicationController < ActionController::API
 
   protected
   def authenticate
-    sleep(3) if Rails.env.development?
     authenticate_token || render_unauthorized
   end
 
   def authenticate_token
     authenticate_or_request_with_http_token do |token, _|
       decoded_token = FirebaseUtils::Auth.verify_id_token(token)
-      firebase_id = decoded_token['uid']
-      @current_user = User.find_by!(firebase_uid: firebase_id)
+      @current_user = find_or_create_user(decoded_token)
+    end
+  end
+
+  def find_or_create_user(decoded_token)
+    user = User.find_by(firebase_uid: decoded_token['uid'])
+    if user.present?
+      return user
+    else
+      return User.create!(
+        name: decoded_token['decoded_token'][:payload]['name'],
+        email: decoded_token['decoded_token'][:payload]['email'],
+        firebase_uid: decoded_token['uid']
+      )
     end
   end
 
